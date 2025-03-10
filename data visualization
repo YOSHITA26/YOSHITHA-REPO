@@ -1,0 +1,76 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Dataset
+data = {
+    "Startup Name": ["Zepto", "Lenskart", "Eruditus", "FreshToHome", "Unacademy", "Razorpay",
+                     "CRED", "Meesho", "Swiggy", "BYJU'S", "Ola", "Paytm", "OYO Rooms",
+                     "Zomato", "PolicyBazaar", "Delhivery", "Udaan", "Dream11", "PhonePe", "InMobi"],
+    "Industry": ["E-commerce", "Eyewear Retail", "EdTech", "Food Delivery", "EdTech",
+                 "FinTech", "FinTech", "E-commerce", "Food Delivery", "EdTech", "Ride Sharing",
+                 "FinTech", "Hospitality", "Food Delivery", "InsurTech", "Logistics",
+                 "B2B E-commerce", "Fantasy Sports", "FinTech", "AdTech"],
+    "Funding Amount (USD)": [200, 500, 150, 121, 440, 375, 251, 570, 1250, 1000, 500, 1000,
+                             660, 250, 75, 277, 280, 225, 700, 200],
+    "City": ["Mumbai", "Delhi", "Mumbai", "Bengaluru", "Bengaluru", "Bengaluru", "Bengaluru",
+             "Bengaluru", "Bengaluru", "Bengaluru", "Bengaluru", "Noida", "Gurugram",
+             "Gurugram", "Gurugram", "Gurugram", "Bengaluru", "Mumbai", "Bengaluru", "Bengaluru"]
+}
+
+
+df = pd.DataFrame(data)
+
+# Plot 1: Bar Plot (Total Funding by Industry)
+plt.figure(figsize=(10, 6))
+df.groupby('Industry')['Funding Amount (USD)'].sum().plot(kind='bar', color='skyblue')
+plt.title('Total Funding by Industry')
+plt.xlabel('Industry')
+plt.ylabel('Total Funding (USD)')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+# Plot 2: Histogram (Funding Amount Distribution)
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Funding Amount (USD)'], kde=True, bins=10, color='blue')
+plt.title('Histogram')
+plt.xlabel('Funding Amount (USD)')
+plt.ylabel('Frequency')
+plt.tight_layout()
+plt.show()
+
+
+# Plot 3: Pie Chart (Funding Count by City)
+city_count = df['City'].value_counts()
+plt.figure(figsize=(8, 8))
+city_count.plot(kind='pie', autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+plt.title('Funding Count by City')
+plt.ylabel('')
+plt.show()
+
+# Plot 4: Box Plot (Funding Amount by Industry)
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Industry', y='Funding Amount (USD)', data=df, palette='viridis', patch_artist=True)
+plt.title('Funding Amount by Industry')
+plt.xlabel('Industry')
+plt.ylabel('Funding Amount (USD)')
+plt.xticks(rotation=45, ha='right')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.show()
+
+
+
+# Plot 5: Scatter Plot (Funding Amount by City and Industry)
+plt.figure(figsize=(10, 6))
+plt.scatter(df['City'], df['Funding Amount (USD)'], label='City', color='blue', alpha=0.7)
+plt.scatter(df['Industry'], df['Funding Amount (USD)'], label='Industry', color='orange', alpha=0.7)
+plt.title('Funding Amount by City and Industry')
+
+plt.xlabel('Categories')
+plt.ylabel('Funding Amount (USD)')
+plt.xticks(rotation=45, ha='right')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+plt.show()
