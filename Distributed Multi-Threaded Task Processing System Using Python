@@ -1,0 +1,157 @@
+import socket
+import threading
+import time
+from queue import Queue
+
+HOST = '127.0.0.1'
+PORT = 5000
+
+task_queue = Queue()
+worker_connections = []
+
+# ---------------- SERVER ---------------- #
+
+def start_server():
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
+    server.listen()
+
+    print(f"\n[SERVER STARTED] {HOST}:{PORT}")
+
+    def handle_client(conn, addr):
+
+        print(f"[CLIENT CONNECTED] {addr}")
+
+        while True:
+            try:
+                task = conn.recv(1024).decode()
+
+                if not task:
+                    break
+
+                print(f"[TASK RECEIVED] {task}")
+
+                task_queue.put(task)
+
+            except:
+                break
+
+        conn.close()
+
+    def distribute_tasks():
+
+        while True:
+
+            if not task_queue.empty() and worker_connections:
+
+                task = task_queue.get()
+
+                worker = worker_connections.pop(0)
+
+                try:
+                    worker.send(task.encode())
+
+                    result = worker.recv(1024).decode()
+
+                    print(f"[TASK RESULT] {result}")
+
+                    worker_connections.append(worker)
+
+                except:
+                    print("[WORKER ERROR]")
+
+    threading.Thread(target=distribute_tasks, daemon=True).start()
+
+    while True:
+
+        conn, addr = server.accept()
+
+        client_type = conn.recv(1024).decode()
+
+        if client_type == "WORKER":
+
+            worker_connections.append(conn)
+
+            print(f"[WORKER CONNECTED] {addr}")
+
+        else:
+
+            threading.Thread(
+                target=handle_client,
+                args=(conn, addr),
+                daemon=True
+            ).start()
+
+# ---------------- WORKER ---------------- #
+
+def start_worker(worker_id):
+
+    worker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    worker.connect((HOST, PORT))
+
+    worker.send("WORKER".encode())
+
+    print(f"[WORKER {worker_id}] Started")
+
+    while True:
+
+        task = worker.recv(1024).decode()
+
+        if not task:
+            break
+
+        print(f"[WORKER {worker_id}] Processing: {task}")
+
+        time.sleep(2)
+
+        result = f"Worker {worker_id} completed -> {task.upper()}"
+
+        worker.send(result.encode())
+
+# ---------------- CLIENT ---------------- #
+
+def start_client():
+
+    time.sleep(2)
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((HOST, PORT))
+
+    client.send("CLIENT".encode())
+
+    tasks = [
+        "process data",
+        "analyze logs",
+        "generate report",
+        "sort files",
+        "compress backup"
+    ]
+
+    for task in tasks:
+
+        print(f"[CLIENT SENT] {task}")
+
+        client.send(task.encode())
+
+        time.sleep(1)
+
+    client.close()
+
+# ---------------- MAIN ---------------- #
+
+threading.Thread(target=start_server, daemon=True).start()
+
+time.sleep(1)
+
+# Start multiple workers
+for i in range(3):
+
+    threading.Thread(
+        target=start_worker,
+        args=(i + 1,),
+        daemon=True
+    ).start()
+
+# Start client
+threading.Thread(target=start_client).start()
